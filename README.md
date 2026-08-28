@@ -1,7 +1,11 @@
-# Auditoria de Sites de Prefeituras Brasileiras
+# Rossio
 
-[![CI](https://github.com/franklinbaldo/sites_prefeituras/actions/workflows/ci.yml/badge.svg)](https://github.com/franklinbaldo/sites_prefeituras/actions/workflows/ci.yml)
-[![Coleta PSI](https://github.com/franklinbaldo/sites_prefeituras/actions/workflows/collect-psi.yml/badge.svg)](https://github.com/franklinbaldo/sites_prefeituras/actions/workflows/collect-psi.yml)
+> *Rossio*: no direito das vilas portuguesas e brasileiras, a terra comum —
+> de uso coletivo, pertencente a todos os moradores e a ninguém em particular.
+> O site de uma prefeitura é o rossio digital do município.
+
+[![CI](https://github.com/franklinbaldo/rossio/actions/workflows/ci.yml/badge.svg)](https://github.com/franklinbaldo/rossio/actions/workflows/ci.yml)
+[![Coleta PSI](https://github.com/franklinbaldo/rossio/actions/workflows/collect-psi.yml/badge.svg)](https://github.com/franklinbaldo/rossio/actions/workflows/collect-psi.yml)
 
 Sistema automatizado de auditoria de sites de prefeituras brasileiras usando Google PageSpeed Insights (PSI). Coleta metricas de desempenho, acessibilidade, SEO e melhores praticas para os 5.570 municipios do Brasil.
 
@@ -44,7 +48,7 @@ CSV (5570 municipios)
 
 ```bash
 # Clonar repositorio
-git clone https://github.com/franklinbaldo/sites_prefeituras.git
+git clone https://github.com/franklinbaldo/rossio.git
 cd sites_prefeituras
 
 # Instalar dependencias

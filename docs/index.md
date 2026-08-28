@@ -97,7 +97,7 @@
     <div class="container">
         <p>&copy; 2024 Acessibilidade Municipal. Dados coletados com PageSpeed Insights.</p>
         <p>
-            <a href="https://github.com/franklinbaldo/sites_prefeituras">GitHub</a> |
+            <a href="https://github.com/franklinbaldo/rossio">GitHub</a> |
             <a href="https://archive.org/details/psi_brazilian_city_audits">Internet Archive</a>
         </p>
     </div>

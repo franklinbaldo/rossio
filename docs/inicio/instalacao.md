@@ -26,7 +26,7 @@
 ## Clonando o Projeto
 
 ```bash
-git clone https://github.com/franklinbaldo/sites_prefeituras.git
+git clone https://github.com/franklinbaldo/rossio.git
 cd sites_prefeituras
 ```
 

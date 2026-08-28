@@ -5,7 +5,7 @@
 ### 1. Clone o Repositorio
 
 ```bash
-git clone https://github.com/franklinbaldo/sites_prefeituras.git
+git clone https://github.com/franklinbaldo/rossio.git
 cd sites_prefeituras
 ```
 
