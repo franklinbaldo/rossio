@@ -293,3 +293,15 @@ Contribuicoes sao bem-vindas! Por favor:
 ## Licenca
 
 Este projeto esta sob a licenca MIT.
+
+## Licença
+
+| | |
+|---|---|
+| **Código** | [MIT](LICENSE) |
+| **Dados** | [CC BY 4.0](LICENSE-DATA) |
+
+As notas vêm da API Google PageSpeed Insights; a lista de municípios deriva da
+divisão político-administrativa do IBGE. Uma nota de acessibilidade é uma
+medição automatizada num instante — não é laudo, e não esgota a avaliação de
+conformidade com a Lei 13.146/2015 ou o eMAG.

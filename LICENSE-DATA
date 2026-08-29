@@ -1,0 +1,44 @@
+# Licença dos dados
+
+Os **dados** deste repositório são licenciados sob a
+**Creative Commons Atribuição 4.0 Internacional (CC BY 4.0)**.
+
+- Resumo legível: https://creativecommons.org/licenses/by/4.0/deed.pt-br
+- Texto legal completo: https://creativecommons.org/licenses/by/4.0/legalcode.pt
+
+O texto legal integral **não está transcrito neste arquivo**; a versão
+autêntica é a publicada pela Creative Commons nos endereços acima.
+
+## O que está coberto
+
+- `sites_das_prefeituras_brasileiras.csv` — os 5.570 municípios com código
+  IBGE, UF, nome e URL
+- `data/**` — resultados de coleta do PageSpeed Insights, estado de
+  processamento e quarentena
+- `knowledge/**` — o bundle OKF (concepts de município e unidade federativa)
+- `docs/data/**` — os agregados exportados para o painel
+
+O **código** tem licença separada: MIT, em `LICENSE`.
+
+## Como atribuir
+
+> Fonte: Rossio — auditoria da presença digital dos municípios brasileiros,
+> por Franklin Silveira Baldo. https://github.com/franklinbaldo/rossio
+> Licenciado sob CC BY 4.0.
+
+## Proveniência de terceiros
+
+As notas de desempenho, acessibilidade, SEO e boas práticas são produzidas
+pela API **Google PageSpeed Insights**, executada sobre sites públicos. Este
+repositório licencia a **compilação, a curadoria e o recorte** desses
+resultados — não reivindica direito sobre a metodologia do Lighthouse nem
+sobre o conteúdo dos sites auditados.
+
+A lista de municípios deriva da divisão político-administrativa do **IBGE**.
+
+## Sem garantia
+
+Os dados são publicados como estão, para escrutínio público. Uma nota de
+acessibilidade é uma medição automatizada num instante — não é laudo técnico,
+não esgota a avaliação de conformidade com a Lei 13.146/2015 nem com o eMAG,
+e não deve ser usada isoladamente como prova de irregularidade.
