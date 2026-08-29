@@ -146,7 +146,7 @@ console = Console()
 class DuckDBStorage:
     """Sistema de armazenamento usando Ibis com backend DuckDB."""
 
-    def __init__(self, db_path: str = "./data/sites_prefeituras.duckdb") -> None:
+    def __init__(self, db_path: str = "./data/rossio.duckdb") -> None:
         self.db_path: Path = Path(db_path)
         self.db_path.parent.mkdir(exist_ok=True)
         self._con: ibis.BaseBackend | None = None

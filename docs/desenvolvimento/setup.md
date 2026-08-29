@@ -6,7 +6,7 @@
 
 ```bash
 git clone https://github.com/franklinbaldo/rossio.git
-cd sites_prefeituras
+cd rossio
 ```
 
 ### 2. Instalacao com UV
@@ -16,7 +16,7 @@ cd sites_prefeituras
 uv sync
 
 # Verificar instalacao
-uv run sites-prefeituras --help
+uv run rossio --help
 ```
 
 ### 3. Configuracao do Ambiente
@@ -31,9 +31,9 @@ export PAGESPEED_API_KEY="sua_chave_api"
 ## Estrutura do Projeto
 
 ```
-sites_prefeituras/
+rossio/
 ├── src/
-│   └── sites_prefeituras/
+│   └── rossio/
 │       ├── __init__.py
 │       ├── cli.py           # Interface CLI (Typer + Rich)
 │       ├── collector.py     # Coletor async (httpx + tenacity)
@@ -69,7 +69,7 @@ uv run pytest
 uv run pytest tests/step_defs/
 
 # Com cobertura
-uv run pytest --cov=sites_prefeituras
+uv run pytest --cov=rossio
 
 # Testes especificos
 uv run pytest tests/test_cli.py -v
@@ -108,19 +108,19 @@ uv run mkdocs gh-deploy
 
 ```bash
 # Testar comandos durante desenvolvimento
-uv run sites-prefeituras audit https://example.com
+uv run rossio audit https://example.com
 
 # Ver todos os comandos
-uv run sites-prefeituras --help
+uv run rossio --help
 
 # Testar metricas
-uv run sites-prefeituras metrics --worst 10
+uv run rossio metrics --worst 10
 
 # Testar quarentena
-uv run sites-prefeituras quarantine
+uv run rossio quarantine
 
 # Exportar dashboard
-uv run sites-prefeituras export-dashboard
+uv run rossio export-dashboard
 ```
 
 ## Desenvolvimento BDD
@@ -173,7 +173,7 @@ git checkout -b feature/nova-funcionalidade
 # tests/step_defs/test_nova_feature.py
 
 # 3. Implementar funcionalidade
-# src/sites_prefeituras/...
+# src/rossio/...
 
 # 4. Rodar testes
 uv run pytest tests/step_defs/test_nova_feature.py -v
@@ -215,7 +215,7 @@ Configuracao recomendada em `.vscode/launch.json`:
             "name": "Debug CLI",
             "type": "python",
             "request": "launch",
-            "module": "sites_prefeituras.cli",
+            "module": "rossio.cli",
             "args": ["audit", "https://example.com"],
             "console": "integratedTerminal",
             "cwd": "${workspaceFolder}"
@@ -274,7 +274,7 @@ logger.info("Info message")
 
 5. **Banco de dados corrompido**
    ```bash
-   rm data/sites_prefeituras.duckdb
+   rm data/rossio.duckdb
    # O banco sera recriado automaticamente
    ```
 

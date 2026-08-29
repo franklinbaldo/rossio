@@ -49,7 +49,7 @@ CSV (5570 municipios)
 ```bash
 # Clonar repositorio
 git clone https://github.com/franklinbaldo/rossio.git
-cd sites_prefeituras
+cd rossio
 
 # Instalar dependencias
 uv sync
@@ -66,35 +66,35 @@ export PAGESPEED_API_KEY="sua_chave_aqui"
 
 ```bash
 # Auditar um site individual
-uv run sites-prefeituras audit https://www.prefeitura.sp.gov.br
+uv run rossio audit https://www.prefeitura.sp.gov.br
 
 # Auditoria em lote (otimizada)
-uv run sites-prefeituras batch sites_das_prefeituras_brasileiras.csv \
+uv run rossio batch sites_das_prefeituras_brasileiras.csv \
   --max-concurrent 10 \
   --requests-per-second 3.5 \
   --skip-recent 24  # Pula sites auditados nas ultimas 24h
 
 # Ver estatisticas do banco
-uv run sites-prefeituras stats
+uv run rossio stats
 ```
 
 ### Metricas e Relatorios
 
 ```bash
 # Metricas agregadas
-uv run sites-prefeituras metrics
+uv run rossio metrics
 
 # Metricas por estado
-uv run sites-prefeituras metrics --by-state
+uv run rossio metrics --by-state
 
 # Top 10 piores sites (performance)
-uv run sites-prefeituras metrics --worst 10
+uv run rossio metrics --worst 10
 
 # Top 10 melhores sites (acessibilidade)
-uv run sites-prefeituras metrics --best 10
+uv run rossio metrics --best 10
 
 # Exportar metricas para JSON
-uv run sites-prefeituras metrics --export metricas.json
+uv run rossio metrics --export metricas.json
 ```
 
 ### Sistema de Quarentena
@@ -103,24 +103,24 @@ Sites com falhas persistentes (3+ dias) sao automaticamente quarentenados:
 
 ```bash
 # Listar sites em quarentena
-uv run sites-prefeituras quarantine
+uv run rossio quarantine
 
 # Atualizar lista de quarentena
-uv run sites-prefeituras quarantine --update
+uv run rossio quarantine --update
 
 # Exportar quarentena para JSON/CSV
-uv run sites-prefeituras quarantine --export-json quarantine.json
-uv run sites-prefeituras quarantine --export-csv quarantine.csv
+uv run rossio quarantine --export-json quarantine.json
+uv run rossio quarantine --export-csv quarantine.csv
 
 # Alterar status de um site
-uv run sites-prefeituras quarantine --url "https://site.gov.br" --set-status investigating
+uv run rossio quarantine --url "https://site.gov.br" --set-status investigating
 ```
 
 ### Exportar Dashboard
 
 ```bash
 # Gerar JSONs estaticos para o dashboard
-uv run sites-prefeituras export-dashboard --output-dir docs/data
+uv run rossio export-dashboard --output-dir docs/data
 ```
 
 Gera os seguintes arquivos:
@@ -191,8 +191,8 @@ Configure os seguintes secrets no GitHub (Settings > Secrets > Actions):
 ## Estrutura do Projeto
 
 ```
-sites_prefeituras/
-├── src/sites_prefeituras/       # Codigo principal
+rossio/
+├── src/rossio/       # Codigo principal
 │   ├── cli.py                   # Interface de linha de comando
 │   ├── collector.py             # Coletor async PSI
 │   ├── models.py                # Modelos Pydantic
@@ -210,7 +210,7 @@ sites_prefeituras/
 │   ├── js/script.js             # Dashboard JavaScript
 │   └── styles.css               # Estilos do dashboard
 ├── data/                        # Dados coletados
-│   ├── sites_prefeituras.duckdb # Banco de dados
+│   ├── rossio.duckdb # Banco de dados
 │   ├── output/                  # Exports Parquet/JSON
 │   └── quarantine/              # Listas de quarentena
 ├── .github/workflows/           # GitHub Actions
@@ -232,7 +232,7 @@ uv sync
 uv run pytest
 
 # Rodar testes com coverage
-uv run pytest --cov=sites_prefeituras
+uv run pytest --cov=rossio
 
 # Lint
 uv run ruff check src/

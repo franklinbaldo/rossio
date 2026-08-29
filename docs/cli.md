@@ -9,7 +9,7 @@ O Sites Prefeituras oferece uma CLI completa para coleta, analise e exportacao d
 uv sync
 
 # Verificar instalacao
-uv run sites-prefeituras --help
+uv run rossio --help
 ```
 
 ## Comandos Disponiveis
@@ -19,7 +19,7 @@ uv run sites-prefeituras --help
 Audita um site individual.
 
 ```bash
-uv run sites-prefeituras audit <URL> [OPCOES]
+uv run rossio audit <URL> [OPCOES]
 ```
 
 **Opcoes:**
@@ -28,7 +28,7 @@ uv run sites-prefeituras audit <URL> [OPCOES]
 
 **Exemplo:**
 ```bash
-uv run sites-prefeituras audit https://www.prefeitura.sp.gov.br --output json
+uv run rossio audit https://www.prefeitura.sp.gov.br --output json
 ```
 
 ---
@@ -38,7 +38,7 @@ uv run sites-prefeituras audit https://www.prefeitura.sp.gov.br --output json
 Executa auditoria em lote a partir de um arquivo CSV.
 
 ```bash
-uv run sites-prefeituras batch <CSV_FILE> [OPCOES]
+uv run rossio batch <CSV_FILE> [OPCOES]
 ```
 
 **Opcoes:**
@@ -53,12 +53,12 @@ uv run sites-prefeituras batch <CSV_FILE> [OPCOES]
 **Exemplo:**
 ```bash
 # Coleta completa
-uv run sites-prefeituras batch sites_das_prefeituras_brasileiras.csv \
+uv run rossio batch sites_das_prefeituras_brasileiras.csv \
   --max-concurrent 10 \
   --requests-per-second 3.5
 
 # Coleta incremental (pula sites recentes)
-uv run sites-prefeituras batch sites_das_prefeituras_brasileiras.csv \
+uv run rossio batch sites_das_prefeituras_brasileiras.csv \
   --skip-recent 24
 ```
 
@@ -69,7 +69,7 @@ uv run sites-prefeituras batch sites_das_prefeituras_brasileiras.csv \
 Mostra estatisticas dos dados coletados.
 
 ```bash
-uv run sites-prefeituras stats [OPCOES]
+uv run rossio stats [OPCOES]
 ```
 
 **Opcoes:**
@@ -77,7 +77,7 @@ uv run sites-prefeituras stats [OPCOES]
 
 **Exemplo:**
 ```bash
-uv run sites-prefeituras stats --db-path ./data/sites_prefeituras.duckdb
+uv run rossio stats --db-path ./data/rossio.duckdb
 ```
 
 ---
@@ -87,7 +87,7 @@ uv run sites-prefeituras stats --db-path ./data/sites_prefeituras.duckdb
 Mostra metricas agregadas das auditorias.
 
 ```bash
-uv run sites-prefeituras metrics [OPCOES]
+uv run rossio metrics [OPCOES]
 ```
 
 **Opcoes:**
@@ -100,19 +100,19 @@ uv run sites-prefeituras metrics [OPCOES]
 **Exemplos:**
 ```bash
 # Metricas gerais
-uv run sites-prefeituras metrics
+uv run rossio metrics
 
 # Por estado
-uv run sites-prefeituras metrics --by-state
+uv run rossio metrics --by-state
 
 # Top 20 piores em performance
-uv run sites-prefeituras metrics --worst 20
+uv run rossio metrics --worst 20
 
 # Top 20 melhores em acessibilidade
-uv run sites-prefeituras metrics --best 20
+uv run rossio metrics --best 20
 
 # Exportar para JSON
-uv run sites-prefeituras metrics --export metricas.json
+uv run rossio metrics --export metricas.json
 ```
 
 ---
@@ -122,7 +122,7 @@ uv run sites-prefeituras metrics --export metricas.json
 Gerencia sites em quarentena (sites com falhas persistentes).
 
 ```bash
-uv run sites-prefeituras quarantine [OPCOES]
+uv run rossio quarantine [OPCOES]
 ```
 
 **Opcoes:**
@@ -145,23 +145,23 @@ uv run sites-prefeituras quarantine [OPCOES]
 **Exemplos:**
 ```bash
 # Listar todos em quarentena
-uv run sites-prefeituras quarantine
+uv run rossio quarantine
 
 # Atualizar quarentena (identifica novos sites com falhas)
-uv run sites-prefeituras quarantine --update --min-days 3
+uv run rossio quarantine --update --min-days 3
 
 # Filtrar por status
-uv run sites-prefeituras quarantine --status investigating
+uv run rossio quarantine --status investigating
 
 # Alterar status de um site
-uv run sites-prefeituras quarantine --url "https://site.gov.br" --set-status investigating
+uv run rossio quarantine --url "https://site.gov.br" --set-status investigating
 
 # Remover da quarentena
-uv run sites-prefeituras quarantine --url "https://site.gov.br" --remove
+uv run rossio quarantine --url "https://site.gov.br" --remove
 
 # Exportar
-uv run sites-prefeituras quarantine --export-json quarantine.json
-uv run sites-prefeituras quarantine --export-csv quarantine.csv
+uv run rossio quarantine --export-json quarantine.json
+uv run rossio quarantine --export-csv quarantine.csv
 ```
 
 ---
@@ -171,7 +171,7 @@ uv run sites-prefeituras quarantine --export-csv quarantine.csv
 Exporta JSONs estaticos para o dashboard web.
 
 ```bash
-uv run sites-prefeituras export-dashboard [OPCOES]
+uv run rossio export-dashboard [OPCOES]
 ```
 
 **Opcoes:**
@@ -188,7 +188,7 @@ uv run sites-prefeituras export-dashboard [OPCOES]
 
 **Exemplo:**
 ```bash
-uv run sites-prefeituras export-dashboard --output-dir docs/data
+uv run rossio export-dashboard --output-dir docs/data
 ```
 
 ---
@@ -198,7 +198,7 @@ uv run sites-prefeituras export-dashboard --output-dir docs/data
 Remove arquivos legados (JavaScript/Node.js).
 
 ```bash
-uv run sites-prefeituras cleanup [OPCOES]
+uv run rossio cleanup [OPCOES]
 ```
 
 **Opcoes:**
@@ -208,7 +208,7 @@ uv run sites-prefeituras cleanup [OPCOES]
 
 **Exemplo:**
 ```bash
-uv run sites-prefeituras cleanup --remove-js --remove-node-modules --confirm
+uv run rossio cleanup --remove-js --remove-node-modules --confirm
 ```
 
 ---
@@ -218,7 +218,7 @@ uv run sites-prefeituras cleanup --remove-js --remove-node-modules --confirm
 Inicia servidor de visualizacao (em desenvolvimento).
 
 ```bash
-uv run sites-prefeituras serve [OPCOES]
+uv run rossio serve [OPCOES]
 ```
 
 **Nota:** Para visualizacao, use o MkDocs:
@@ -244,18 +244,18 @@ Ambas as variaveis sao aceitas para compatibilidade.
 export PSI_KEY="sua_chave_aqui"
 
 # 2. Executar coleta incremental
-uv run sites-prefeituras batch sites_das_prefeituras_brasileiras.csv \
+uv run rossio batch sites_das_prefeituras_brasileiras.csv \
   --skip-recent 24 \
   --requests-per-second 3.5
 
 # 3. Ver estatisticas
-uv run sites-prefeituras stats
+uv run rossio stats
 
 # 4. Atualizar quarentena
-uv run sites-prefeituras quarantine --update
+uv run rossio quarantine --update
 
 # 5. Exportar para dashboard
-uv run sites-prefeituras export-dashboard
+uv run rossio export-dashboard
 
 # 6. Visualizar
 uv run mkdocs serve
@@ -265,14 +265,14 @@ uv run mkdocs serve
 
 ```bash
 # Ver metricas gerais
-uv run sites-prefeituras metrics
+uv run rossio metrics
 
 # Ranking por estado
-uv run sites-prefeituras metrics --by-state
+uv run rossio metrics --by-state
 
 # Sites que precisam de atencao
-uv run sites-prefeituras metrics --worst 50
+uv run rossio metrics --worst 50
 
 # Sites em quarentena
-uv run sites-prefeituras quarantine
+uv run rossio quarantine
 ```

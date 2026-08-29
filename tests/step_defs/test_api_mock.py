@@ -7,7 +7,7 @@ import pytest
 from httpx import Response
 from pytest_bdd import given, parsers, scenarios, then, when
 
-from sites_prefeituras.collector import PageSpeedCollector, process_urls_in_chunks
+from rossio.collector import PageSpeedCollector, process_urls_in_chunks
 from tests.conftest import create_psi_response
 
 # Carrega os cenarios do arquivo .feature

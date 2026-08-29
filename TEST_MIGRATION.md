@@ -5,7 +5,7 @@ Execute estes comandos para testar se a migração está funcionando:
 ## 1️⃣ **Verificar UV e Instalação**
 
 ```bash
-cd sites_prefeituras
+cd rossio
 
 # Verificar se UV está instalado
 uv --version
@@ -14,7 +14,7 @@ uv --version
 uv sync
 
 # Verificar se CLI foi instalada
-uv run sites-prefeituras --help
+uv run rossio --help
 ```
 
 **✅ Esperado:** Deve mostrar help do CLI com comandos audit, batch, serve, stats, cleanup
@@ -23,11 +23,11 @@ uv run sites-prefeituras --help
 
 ```bash
 # Testar help de cada comando
-uv run sites-prefeituras audit --help
-uv run sites-prefeituras batch --help
-uv run sites-prefeituras serve --help
-uv run sites-prefeituras stats --help
-uv run sites-prefeituras cleanup --help
+uv run rossio audit --help
+uv run rossio batch --help
+uv run rossio serve --help
+uv run rossio stats --help
+uv run rossio cleanup --help
 ```
 
 **✅ Esperado:** Cada comando deve mostrar suas opções específicas
@@ -36,7 +36,7 @@ uv run sites-prefeituras cleanup --help
 
 ```bash
 # Verificar quais arquivos JS existem
-uv run sites-prefeituras cleanup --remove-js
+uv run rossio cleanup --remove-js
 ```
 
 **✅ Esperado:** Deve listar arquivos JavaScript encontrados ou dizer que não há nenhum
@@ -69,7 +69,7 @@ uv run mkdocs serve
 
 ```bash
 # Testar stats sem banco existente
-uv run sites-prefeituras stats
+uv run rossio stats
 ```
 
 **✅ Esperado:** Deve criar banco vazio e mostrar estatísticas zeradas
@@ -78,7 +78,7 @@ uv run sites-prefeituras stats
 
 ```bash
 # Testar audit sem API key (deve falhar graciosamente)
-uv run sites-prefeituras audit https://example.com
+uv run rossio audit https://example.com
 ```
 
 **✅ Esperado:** Deve mostrar erro pedindo PAGESPEED_API_KEY
@@ -87,7 +87,7 @@ uv run sites-prefeituras audit https://example.com
 
 ```bash
 # Verificar se arquivos Python foram criados
-ls -la src/sites_prefeituras/
+ls -la src/rossio/
 ls -la tests/
 ls -la docs/
 
@@ -103,7 +103,7 @@ cat pyproject.toml
 
 - [ ] UV instalado e funcionando
 - [ ] `uv sync` executa sem erros
-- [ ] CLI `sites-prefeituras --help` funciona
+- [ ] CLI `rossio --help` funciona
 - [ ] Todos os comandos têm help
 - [ ] `pytest` executa (pode ter warnings)
 - [ ] `mkdocs serve` funciona
@@ -119,7 +119,7 @@ cat pyproject.toml
 ### Erro de importação:
 ```bash
 # Verificar se pacote está instalado corretamente
-uv run python -c "import sites_prefeituras; print('OK')"
+uv run python -c "import rossio; print('OK')"
 ```
 
 ### Erro de dependências:
@@ -143,5 +143,5 @@ A migração Python está funcionando perfeitamente! ✅
 Você pode:
 1. Fazer o commit na branch `python-migration`
 2. Configurar API key: `export PAGESPEED_API_KEY="sua_chave"`
-3. Testar auditoria real: `uv run sites-prefeituras audit https://google.com`
-4. Limpar arquivos JS: `uv run sites-prefeituras cleanup --remove-js --confirm`
+3. Testar auditoria real: `uv run rossio audit https://google.com`
+4. Limpar arquivos JS: `uv run rossio cleanup --remove-js --confirm`

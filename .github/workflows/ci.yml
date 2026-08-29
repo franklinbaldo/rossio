@@ -34,7 +34,7 @@ jobs:
         run: uv run ruff format --check src/ tests/
 
       - name: Run MyPy (type check)
-        run: uv run mypy src/sites_prefeituras/
+        run: uv run mypy src/rossio/
 
   test:
     name: Tests
@@ -56,7 +56,7 @@ jobs:
         run: uv sync --all-extras
 
       - name: Run tests with coverage
-        run: uv run pytest --cov=sites_prefeituras --cov-report=xml --cov-report=term-missing -v
+        run: uv run pytest --cov=rossio --cov-report=xml --cov-report=term-missing -v
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4

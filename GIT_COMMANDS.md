@@ -4,7 +4,7 @@ Execute estes comandos no terminal para fazer o commit da migração Python:
 
 ## 1. Verificar Status
 ```bash
-cd sites_prefeituras
+cd rossio
 git status
 ```
 
@@ -40,7 +40,7 @@ rm GIT_COMMANDS.md
 
 ### Arquivos Criados/Modificados:
 - `pyproject.toml` - Configuração Python/UV
-- `src/sites_prefeituras/` - Código Python completo
+- `src/rossio/` - Código Python completo
 - `tests/` - Testes E2E funcionais
 - `docs/` - Documentação MkDocs Material
 - `mkdocs.yml` - Configuração documentação

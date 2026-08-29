@@ -25,7 +25,7 @@ env:
   PAGESPEED_API_KEY: ${{ secrets.PSI_KEY }}
   IA_ACCESS_KEY: ${{ secrets.IA_ACCESS_KEY }}
   IA_SECRET_KEY: ${{ secrets.IA_SECRET_KEY }}
-  DATABASE_PATH: data/sites_prefeituras.duckdb
+  DATABASE_PATH: data/rossio.duckdb
   OUTPUT_DIR: data/output
 
 jobs:
@@ -85,7 +85,7 @@ jobs:
       - name: Restore previous database (if exists)
         uses: actions/cache@v4
         with:
-          path: data/sites_prefeituras.duckdb
+          path: data/rossio.duckdb
           key: psi-duckdb-${{ github.run_id }}
           restore-keys: |
             psi-duckdb-
@@ -105,7 +105,7 @@ jobs:
           echo "  Skip recent: ${SKIP_RECENT}h"
 
           # Executar coleta via CLI Python com coleta incremental
-          uv run sites-prefeituras batch \
+          uv run rossio batch \
             sites_das_prefeituras_brasileiras.csv \
             --output-dir "$OUTPUT_DIR" \
             --max-concurrent "$MAX_CONCURRENT" \
@@ -130,7 +130,7 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
 
           if [ -f "$DATABASE_PATH" ]; then
-            uv run sites-prefeituras stats --db-path "$DATABASE_PATH" || true
+            uv run rossio stats --db-path "$DATABASE_PATH" || true
 
             # Adicionar ao summary
             echo "Database: $DATABASE_PATH" >> $GITHUB_STEP_SUMMARY
@@ -153,7 +153,7 @@ jobs:
             echo "Exportando dados para dashboard (JSON estatico)..."
 
             # Usar CLI para exportar JSONs estaticos
-            uv run sites-prefeituras export-dashboard \
+            uv run rossio export-dashboard \
               --db-path "$DATABASE_PATH" \
               --output-dir "docs/data" \
               || echo "Dashboard export failed, skipping..."
@@ -172,13 +172,13 @@ jobs:
             echo "Atualizando lista de quarentena..."
 
             # Atualizar quarentena (sites com 3+ dias de falha)
-            uv run sites-prefeituras quarantine --update --min-days 3 --db-path "$DATABASE_PATH" || true
+            uv run rossio quarantine --update --min-days 3 --db-path "$DATABASE_PATH" || true
 
             # Exportar para JSON (para repositorio e Internet Archive)
             QUARANTINE_DATE=$(date -u +'%Y-%m-%d')
-            uv run sites-prefeituras quarantine --export-json "data/quarantine/quarantine-${QUARANTINE_DATE}.json" --db-path "$DATABASE_PATH" || true
-            uv run sites-prefeituras quarantine --export-json "data/quarantine/quarantine-latest.json" --db-path "$DATABASE_PATH" || true
-            uv run sites-prefeituras quarantine --export-csv "data/quarantine/quarantine-latest.csv" --db-path "$DATABASE_PATH" || true
+            uv run rossio quarantine --export-json "data/quarantine/quarantine-${QUARANTINE_DATE}.json" --db-path "$DATABASE_PATH" || true
+            uv run rossio quarantine --export-json "data/quarantine/quarantine-latest.json" --db-path "$DATABASE_PATH" || true
+            uv run rossio quarantine --export-csv "data/quarantine/quarantine-latest.csv" --db-path "$DATABASE_PATH" || true
 
             # Resumo para o step summary
             echo "" >> $GITHUB_STEP_SUMMARY
@@ -201,7 +201,7 @@ jobs:
             # Upload JSONs do dashboard
             if [ -d "docs/data" ]; then
               echo "Uploading dashboard JSON files to Internet Archive..."
-              uv run python -m sites_prefeituras.upload_ia dashboard \
+              uv run python -m rossio.upload_ia dashboard \
                 docs/data \
                 --item "$IA_ITEM_IDENTIFIER" \
                 || echo "Dashboard JSON upload failed"
@@ -212,7 +212,7 @@ jobs:
               echo "Uploading quarantine list to Internet Archive..."
               QUARANTINE_DATE=$(date -u +'%Y-%m-%d')
 
-              uv run python -m sites_prefeituras.upload_ia quarantine \
+              uv run python -m rossio.upload_ia quarantine \
                 "data/quarantine/quarantine-${QUARANTINE_DATE}.json" \
                 "data/quarantine/quarantine-latest.json" \
                 --item "$IA_ITEM_IDENTIFIER" \
@@ -259,7 +259,7 @@ jobs:
         uses: actions/cache/save@v4
         if: always()
         with:
-          path: data/sites_prefeituras.duckdb
+          path: data/rossio.duckdb
           key: psi-duckdb-${{ github.run_id }}
 
       - name: Upload artifacts

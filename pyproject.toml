@@ -1,5 +1,5 @@
 [project]
-name = "sites-prefeituras"
+name = "rossio"
 version = "0.1.0"
 description = "Auditoria de Sites de Prefeituras Brasileiras - Python"
 authors = [
@@ -34,7 +34,7 @@ dev = [
 ]
 
 [project.scripts]
-sites-prefeituras = "sites_prefeituras.cli:app"
+rossio = "rossio.cli:app"
 
 [build-system]
 requires = ["hatchling"]

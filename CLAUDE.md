@@ -21,8 +21,8 @@ Este arquivo fornece contexto para assistentes de IA trabalhando neste projeto.
 ## Estrutura do Projeto
 
 ```
-sites_prefeituras/
-├── src/sites_prefeituras/       # Codigo principal
+rossio/
+├── src/rossio/       # Codigo principal
 │   ├── cli.py                   # Interface de linha de comando
 │   ├── collector.py             # Coletor async PSI
 │   ├── models.py                # Modelos Pydantic
@@ -40,7 +40,7 @@ sites_prefeituras/
 │   ├── collect-psi.yml          # Coleta diaria
 │   └── docs.yml                 # Deploy docs
 └── data/                        # Dados coletados
-    ├── sites_prefeituras.duckdb # Banco de dados
+    ├── rossio.duckdb # Banco de dados
     └── quarantine/              # Listas de quarentena
 ```
 
@@ -54,12 +54,12 @@ uv sync
 uv run pytest
 
 # CLI
-uv run sites-prefeituras --help
-uv run sites-prefeituras audit <URL>
-uv run sites-prefeituras batch <CSV>
-uv run sites-prefeituras metrics
-uv run sites-prefeituras quarantine
-uv run sites-prefeituras export-dashboard
+uv run rossio --help
+uv run rossio audit <URL>
+uv run rossio batch <CSV>
+uv run rossio metrics
+uv run rossio quarantine
+uv run rossio export-dashboard
 ```
 
 ## Conceitos Importantes
@@ -141,7 +141,7 @@ Funcionalidade: Sistema de quarentena
 
 1. **Testes falhando**: `uv run pytest -v --tb=long`
 2. **API Key**: Verificar `PSI_KEY` ou `PAGESPEED_API_KEY`
-3. **Banco corrompido**: Deletar `data/sites_prefeituras.duckdb`
+3. **Banco corrompido**: Deletar `data/rossio.duckdb`
 4. **Dependencias**: `uv sync --reinstall`
 
 ## Links Uteis

@@ -22,7 +22,7 @@ Este documento lista os arquivos JavaScript e Node.js que devem ser removidos du
 
 ### Configuração Python
 - `pyproject.toml` - Configuração Python/UV
-- `src/sites_prefeituras/` - Código Python
+- `src/rossio/` - Código Python
 - `tests/` - Testes Python
 
 ### Documentação
@@ -39,10 +39,10 @@ Este documento lista os arquivos JavaScript e Node.js que devem ser removidos du
 ### Automática (recomendado)
 ```bash
 # Remover apenas arquivos JavaScript
-uv run sites-prefeituras cleanup --remove-js --confirm
+uv run rossio cleanup --remove-js --confirm
 
 # Remover tudo (JS + node_modules)
-uv run sites-prefeituras cleanup --remove-js --remove-node-modules --confirm
+uv run rossio cleanup --remove-js --remove-node-modules --confirm
 ```
 
 ### Manual
@@ -65,7 +65,7 @@ rmdir collector/ 2>/dev/null || true
 - [ ] `node_modules/` removido
 - [ ] `package.json` removido
 - [ ] Funcionalidade Python testada
-- [ ] CLI funcionando: `uv run sites-prefeituras --help`
+- [ ] CLI funcionando: `uv run rossio --help`
 - [ ] Testes passando: `uv run pytest`
 - [ ] Documentação servindo: `uv run mkdocs serve`
 
@@ -73,9 +73,9 @@ rmdir collector/ 2>/dev/null || true
 
 | Antes (Node.js) | Agora (Python) |
 |-----------------|----------------|
-| `collector/collect-psi.js` | `src/sites_prefeituras/collector.py` |
+| `collector/collect-psi.js` | `src/rossio/collector.py` |
 | `npm install` | `uv sync` |
-| `node collector/collect-psi.js` | `uv run sites-prefeituras batch` |
+| `node collector/collect-psi.js` | `uv run rossio batch` |
 | `package.json` | `pyproject.toml` |
 | HTML estático | MkDocs + DuckDB-wasm (futuro) |
 

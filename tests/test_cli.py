@@ -8,7 +8,7 @@ from unittest.mock import patch
 import pytest
 from typer.testing import CliRunner
 
-from sites_prefeituras.cli import app
+from rossio.cli import app
 
 runner = CliRunner()
 
@@ -20,7 +20,7 @@ class TestCLI:
         """Testa se o comando help funciona."""
         result = runner.invoke(app, ["--help"])
         assert result.exit_code == 0
-        assert "sites-prefeituras" in result.stdout
+        assert "rossio" in result.stdout
         assert "Auditoria automatizada" in result.stdout
 
     def test_audit_command_help(self):
@@ -132,7 +132,7 @@ class TestModels:
 
     def test_site_audit_creation(self):
         """Testa criação de SiteAudit."""
-        from sites_prefeituras.models import SiteAudit
+        from rossio.models import SiteAudit
 
         audit = SiteAudit(url="https://example.com")
         assert str(audit.url) == "https://example.com/"
@@ -141,7 +141,7 @@ class TestModels:
 
     def test_batch_audit_config_creation(self):
         """Testa criação de BatchAuditConfig."""
-        from sites_prefeituras.models import BatchAuditConfig
+        from rossio.models import BatchAuditConfig
 
         config = BatchAuditConfig(csv_file="test.csv")
         assert config.csv_file == "test.csv"
@@ -157,7 +157,7 @@ class TestStorage:
     @pytest.mark.asyncio
     async def test_duckdb_storage_initialization(self):
         """Testa inicialização do DuckDB storage."""
-        from sites_prefeituras.storage import DuckDBStorage
+        from rossio.storage import DuckDBStorage
 
         with tempfile.TemporaryDirectory() as temp_dir:
             db_path = Path(temp_dir) / "test.duckdb"

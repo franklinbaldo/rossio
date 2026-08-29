@@ -27,7 +27,7 @@
 
 ```bash
 git clone https://github.com/franklinbaldo/rossio.git
-cd sites_prefeituras
+cd rossio
 ```
 
 ## Instalacao com UV (Recomendado)
@@ -37,7 +37,7 @@ cd sites_prefeituras
 uv sync
 
 # Verificar instalacao
-uv run sites-prefeituras --help
+uv run rossio --help
 ```
 
 ## Instalacao com pip (Alternativa)
@@ -53,7 +53,7 @@ source .venv/bin/activate  # Linux/macOS
 pip install -e .
 
 # Verificar instalacao
-sites-prefeituras --help
+rossio --help
 ```
 
 ## Configuracao da API
@@ -77,10 +77,10 @@ export PAGESPEED_API_KEY="sua_chave_aqui"
 
 ```bash
 # Testar CLI
-uv run sites-prefeituras --help
+uv run rossio --help
 
 # Ver comandos disponiveis
-uv run sites-prefeituras --help
+uv run rossio --help
 
 # Executar testes
 uv run pytest
@@ -93,22 +93,22 @@ uv run mkdocs serve
 
 ```bash
 # Auditar um site
-uv run sites-prefeituras audit https://www.prefeitura.sp.gov.br
+uv run rossio audit https://www.prefeitura.sp.gov.br
 
 # Auditoria em lote
-uv run sites-prefeituras batch sites_das_prefeituras_brasileiras.csv
+uv run rossio batch sites_das_prefeituras_brasileiras.csv
 
 # Ver estatisticas
-uv run sites-prefeituras stats
+uv run rossio stats
 
 # Metricas agregadas
-uv run sites-prefeituras metrics
+uv run rossio metrics
 
 # Gerenciar quarentena
-uv run sites-prefeituras quarantine
+uv run rossio quarantine
 
 # Exportar dashboard
-uv run sites-prefeituras export-dashboard
+uv run rossio export-dashboard
 ```
 
 ## Proximos Passos

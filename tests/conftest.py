@@ -10,7 +10,7 @@ import pytest
 import pytest_asyncio
 import respx
 
-from sites_prefeituras.storage import DuckDBStorage
+from rossio.storage import DuckDBStorage
 
 # ============================================================================
 # Fixtures de banco de dados (Ibis)

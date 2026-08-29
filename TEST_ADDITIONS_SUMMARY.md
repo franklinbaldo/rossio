@@ -9,7 +9,7 @@ This document summarizes the completion of Task 3, which involved:
 ## 1. Export Dashboard Tests
 
 ### Created File
-- `/home/user/sites_prefeituras/tests/test_export_dashboard.py`
+- `/home/user/rossio/tests/test_export_dashboard.py`
 
 ### Test Coverage
 
@@ -64,7 +64,7 @@ The tests verify creation and validity of:
 ## 2. process_urls_in_chunks Investigation
 
 ### Location
-- `src/sites_prefeituras/collector.py` lines 253-289
+- `src/rossio/collector.py` lines 253-289
 
 ### Current Usage
 The function `process_urls_in_chunks` is currently used **only in tests**:
@@ -167,7 +167,7 @@ from typing import List, Optional, AsyncGenerator, Iterator
 
 1. **New**: `tests/test_export_dashboard.py` - Export dashboard tests
 2. **New**: `tests/__init__.py` - Makes tests a package
-3. **Modified**: `src/sites_prefeituras/collector.py` - Added documentation
+3. **Modified**: `src/rossio/collector.py` - Added documentation
 4. **New**: `TEST_ADDITIONS_SUMMARY.md` - This file
 
 ## Conclusion

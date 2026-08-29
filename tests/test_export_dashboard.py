@@ -4,7 +4,7 @@ import json
 
 import pytest
 
-from sites_prefeituras.storage import DuckDBStorage
+from rossio.storage import DuckDBStorage
 
 
 @pytest.mark.asyncio

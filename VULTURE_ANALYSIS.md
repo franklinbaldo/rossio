@@ -2,7 +2,7 @@
 
 **Date:** 2026-01-22
 **Tool:** vulture (via uvx)
-**Scope:** `src/sites_prefeituras/`
+**Scope:** `src/rossio/`
 
 ## Summary
 
@@ -17,7 +17,7 @@ Vulture found **51 potential dead code issues**. After manual verification:
 
 ### 1. Unused Import: `pandas` in storage.py
 ```python
-# Line 10: src/sites_prefeituras/storage.py
+# Line 10: src/rossio/storage.py
 import pandas as pd  # ← NEVER USED
 ```
 **Action:** Remove the import. Pandas is in dependencies but not used.
@@ -26,7 +26,7 @@ import pandas as pd  # ← NEVER USED
 
 ### 2. Unused Import: `audit_batch` in cli.py
 ```python
-# Line 14: src/sites_prefeituras/cli.py
+# Line 14: src/rossio/cli.py
 from .collector import audit_single_site, audit_batch, BatchProcessor
 #                                         ^^^^^^^^^^^^ NEVER USED
 ```
@@ -36,7 +36,7 @@ from .collector import audit_single_site, audit_batch, BatchProcessor
 
 ### 3. Unused Variable: `skipped_count` in collector.py
 ```python
-# Lines 201-203: src/sites_prefeituras/collector.py
+# Lines 201-203: src/rossio/collector.py
 audit_count = 0
 error_count = 0
 skipped_count = 0  # ← Initialized but never incremented or used
@@ -47,7 +47,7 @@ skipped_count = 0  # ← Initialized but never incremented or used
 
 ### 4. Unused Method: `get_failed_urls()` in storage.py
 ```python
-# Line 214: src/sites_prefeituras/storage.py
+# Line 214: src/rossio/storage.py
 async def get_failed_urls(self, hours: int = 24) -> set[str]:
     """Retorna URLs que falharam nas ultimas N horas."""
     # ... implementation ...
@@ -59,7 +59,7 @@ async def get_failed_urls(self, hours: int = 24) -> set[str]:
 
 ### 5. Unused Method: `export_for_dashboard()` in storage.py
 ```python
-# Line 254: src/sites_prefeituras/storage.py
+# Line 254: src/rossio/storage.py
 async def export_for_dashboard(self, output_file: Path) -> dict:
     """Exporta dados otimizados para dashboard."""
     # ... implementation ...
@@ -73,7 +73,7 @@ async def export_for_dashboard(self, output_file: Path) -> dict:
 
 ### 1. Functions `process_urls_in_chunks()` and `audit_batch()`
 ```python
-# Lines 254 & 303: src/sites_prefeituras/collector.py
+# Lines 254 & 303: src/rossio/collector.py
 async def process_urls_in_chunks(...):  # ← Only used in audit_batch()
 async def audit_batch(...):             # ← Never called externally
 ```
@@ -102,7 +102,7 @@ def export_dashboard(...):  # ← Flagged as unused, but IS used via CLI
 
 ### 2. Context Manager Protocol Parameters
 ```python
-# Line 44: src/sites_prefeituras/collector.py
+# Line 44: src/rossio/collector.py
 async def __aexit__(self, exc_type, exc_val, exc_tb):
     #                      ^^^^^^^^  ^^^^^^^  ^^^^^^
     #                      Required by Python protocol, even if unused
@@ -143,23 +143,23 @@ async def get_urls_to_skip_quarantine(...)  # ← Used in test_quarantine.py
 ### Immediate Cleanup (15 minutes)
 ```bash
 # 1. Remove unused pandas import
-# src/sites_prefeituras/storage.py:10
+# src/rossio/storage.py:10
 - import pandas as pd
 
 # 2. Remove unused audit_batch import
-# src/sites_prefeituras/cli.py:14
+# src/rossio/cli.py:14
 - from .collector import audit_single_site, audit_batch, BatchProcessor
 + from .collector import audit_single_site, BatchProcessor
 
 # 3. Remove skipped_count variable
-# src/sites_prefeituras/collector.py:203
+# src/rossio/collector.py:203
 - skipped_count = 0
 ```
 
 ### Verification Needed (1 hour)
 ```bash
 # Run full test suite without these functions:
-# src/sites_prefeituras/collector.py
+# src/rossio/collector.py
 # - process_urls_in_chunks()  (line 254)
 # - audit_batch()             (line 303)
 
@@ -168,7 +168,7 @@ async def get_urls_to_skip_quarantine(...)  # ← Used in test_quarantine.py
 
 ### Safe to Remove (if not planned for future)
 ```bash
-# src/sites_prefeituras/storage.py
+# src/rossio/storage.py
 # - get_failed_urls()        (line 214)
 # - export_for_dashboard()   (line 254)
 ```

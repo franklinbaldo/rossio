@@ -23,6 +23,6 @@ feat: migração completa para Python
 - Unifica arquitetura em Python puro
 
 📋 PRÓXIMOS PASSOS:
-- Executar: uv run sites-prefeituras cleanup --remove-js --confirm
-- Testar: uv run sites-prefeituras audit https://example.com
+- Executar: uv run rossio cleanup --remove-js --confirm
+- Testar: uv run rossio audit https://example.com
 - Deploy: Configurar CI/CD para nova stack Python

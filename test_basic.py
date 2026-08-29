@@ -7,17 +7,17 @@ from pathlib import Path
 def test_imports():
     """Testa se os módulos podem ser importados."""
     try:
-        from sites_prefeituras import __version__
-        print(f"✅ sites_prefeituras importado - versão: {__version__}")
+        from rossio import __version__
+        print(f"✅ rossio importado - versão: {__version__}")
         return True
     except ImportError as e:
-        print(f"❌ Erro ao importar sites_prefeituras: {e}")
+        print(f"❌ Erro ao importar rossio: {e}")
         return False
 
 def test_cli_import():
     """Testa se o CLI pode ser importado."""
     try:
-        from sites_prefeituras.cli import app
+        from rossio.cli import app
         print("✅ CLI importado com sucesso")
         return True
     except ImportError as e:
@@ -27,7 +27,7 @@ def test_cli_import():
 def test_models_import():
     """Testa se os modelos podem ser importados."""
     try:
-        from sites_prefeituras.models import SiteAudit, BatchAuditConfig
+        from rossio.models import SiteAudit, BatchAuditConfig
         print("✅ Modelos Pydantic importados com sucesso")
         return True
     except ImportError as e:
@@ -37,7 +37,7 @@ def test_models_import():
 def test_collector_import():
     """Testa se o collector pode ser importado."""
     try:
-        from sites_prefeituras.collector import PageSpeedCollector
+        from rossio.collector import PageSpeedCollector
         print("✅ Collector importado com sucesso")
         return True
     except ImportError as e:
@@ -47,7 +47,7 @@ def test_collector_import():
 def test_storage_import():
     """Testa se o storage pode ser importado."""
     try:
-        from sites_prefeituras.storage import DuckDBStorage
+        from rossio.storage import DuckDBStorage
         print("✅ Storage importado com sucesso")
         return True
     except ImportError as e:
@@ -58,11 +58,11 @@ def test_file_structure():
     """Testa se a estrutura de arquivos está correta."""
     required_files = [
         "pyproject.toml",
-        "src/sites_prefeituras/__init__.py",
-        "src/sites_prefeituras/cli.py",
-        "src/sites_prefeituras/models.py",
-        "src/sites_prefeituras/collector.py",
-        "src/sites_prefeituras/storage.py",
+        "src/rossio/__init__.py",
+        "src/rossio/cli.py",
+        "src/rossio/models.py",
+        "src/rossio/collector.py",
+        "src/rossio/storage.py",
         "tests/test_cli.py",
         "mkdocs.yml",
     ]

@@ -1,1 +1,1 @@
-"""Tests package for sites_prefeituras."""
+"""Tests package for rossio."""

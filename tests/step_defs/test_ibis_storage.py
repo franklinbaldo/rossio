@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 import pytest
 from pytest_bdd import given, parsers, scenarios, then, when
 
-from sites_prefeituras.models import PageSpeedInsightsResult, SiteAudit
+from rossio.models import PageSpeedInsightsResult, SiteAudit
 from tests.conftest import create_psi_response
 
 # Carrega os cenarios do arquivo .feature

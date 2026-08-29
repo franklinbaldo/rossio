@@ -15,7 +15,7 @@ from .models import BatchAuditConfig, SiteAudit
 from .storage import DuckDBStorage
 
 app = typer.Typer(
-    name="sites-prefeituras",
+    name="rossio",
     help="Auditoria automatizada de sites de prefeituras brasileiras",
     rich_markup_mode="rich",
 )
@@ -127,7 +127,7 @@ def serve(
     port: int = typer.Option(8000, help="Porta do servidor"),
     host: str = typer.Option("localhost", help="Host do servidor"),
     db_path: str = typer.Option(
-        "./data/sites_prefeituras.duckdb", help="Caminho do banco"
+        "./data/rossio.duckdb", help="Caminho do banco"
     ),
 ) -> None:
     """Inicia servidor web para visualização dos dados."""
@@ -145,7 +145,7 @@ def serve(
 @app.command()
 def stats(
     db_path: str = typer.Option(
-        "./data/sites_prefeituras.duckdb", help="Caminho do banco"
+        "./data/rossio.duckdb", help="Caminho do banco"
     ),
 ) -> None:
     """Mostra estatísticas dos dados coletados."""
@@ -292,7 +292,7 @@ def cleanup(
 @app.command()
 def metrics(
     db_path: str = typer.Option(
-        "./data/sites_prefeituras.duckdb", help="Caminho do banco"
+        "./data/rossio.duckdb", help="Caminho do banco"
     ),
     by_state: bool = typer.Option(False, "--by-state", help="Agrupar por estado"),
     worst: int = typer.Option(
@@ -452,7 +452,7 @@ def metrics(
 @app.command()
 def quarantine(
     db_path: str = typer.Option(
-        "./data/sites_prefeituras.duckdb", help="Caminho do banco"
+        "./data/rossio.duckdb", help="Caminho do banco"
     ),
     update: bool = typer.Option(
         False, "--update", help="Atualizar lista de quarentena"
@@ -580,7 +580,7 @@ def quarantine(
 @app.command("export-dashboard")
 def export_dashboard(
     db_path: str = typer.Option(
-        "./data/sites_prefeituras.duckdb", help="Caminho do banco"
+        "./data/rossio.duckdb", help="Caminho do banco"
     ),
     output_dir: str = typer.Option("./docs/data", help="Diretorio de saida"),
 ) -> None:
