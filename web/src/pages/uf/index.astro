@@ -1,0 +1,29 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+
+const ufs = (await getCollection('unidadesFederativas')).sort((a, b) =>
+  a.data.nome.localeCompare(b.data.nome, 'pt-BR'),
+);
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+
+const regioes = ['Norte', 'Nordeste', 'Centro-Oeste', 'Sudeste', 'Sul'];
+---
+<Base titulo="Estados" descricao="As 27 unidades federativas do Brasil.">
+  <h1>Unidades federativas</h1>
+  <p class="sub">27 estados e o Distrito Federal, por região.</p>
+  {regioes.map((regiao) => (
+    <section>
+      <h2>{regiao}</h2>
+      <ul class="lista-uf">
+        {ufs.filter((uf) => uf.data.regiao === regiao).map((uf) => (
+          <li>
+            <a href={`${base}/uf/${uf.data.sigla}/`}>
+              <strong>{uf.data.nome}</strong> <span style="color:var(--tinta-fraca)">{uf.data.sigla}</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </section>
+  ))}
+</Base>

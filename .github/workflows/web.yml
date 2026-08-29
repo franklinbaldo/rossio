@@ -1,0 +1,61 @@
+name: Site — build e publicação
+
+# O site é derivado: nasce do bundle OKF em knowledge/ e das medições em
+# data/psi-results.csv. Reconstruir a cada push mantém as duas coisas em fase
+# sem ninguém precisar lembrar de rodar nada.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'web/**'
+      - 'knowledge/**'
+      - 'data/psi-results.csv'
+      - '.github/workflows/web.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validar o bundle antes de publicar
+        run: |
+          pipx run --spec okf-parser okf-parser check knowledge
+        continue-on-error: false
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Instalar dependências
+        working-directory: web
+        run: bun install --frozen-lockfile
+
+      - name: Construir
+        working-directory: web
+        run: bun run build
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: web/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

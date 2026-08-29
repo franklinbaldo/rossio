@@ -1,0 +1,167 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import Nota from '../components/Nota.astro';
+import { medicoesPorIbge, percentual } from '../lib/psi';
+
+const municipios = await getCollection('municipios');
+const ufs = await getCollection('unidadesFederativas');
+const medicoes = medicoesPorIbge();
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const href = (caminho: string) => `${base}${caminho}`;
+
+type Linha = {
+  ibge: string;
+  nome: string;
+  uf: string;
+  acessibilidade: number | null;
+};
+
+const linhas: Linha[] = municipios.map((m) => ({
+  ibge: m.data.codigo_ibge,
+  nome: m.data.nome,
+  uf: m.data.uf,
+  acessibilidade: medicoes.get(m.data.codigo_ibge)?.acessibilidade ?? null,
+}));
+
+const medidos = linhas.filter((l) => l.acessibilidade !== null) as (Linha & {
+  acessibilidade: number;
+})[];
+const ordenados = [...medidos].sort((a, b) => a.acessibilidade - b.acessibilidade);
+
+const media = medidos.reduce((soma, l) => soma + l.acessibilidade, 0) / (medidos.length || 1);
+const criticos = medidos.filter((l) => l.acessibilidade < 0.5).length;
+const cobertura = Math.round((medidos.length / linhas.length) * 100);
+
+const piores = ordenados.slice(0, 20);
+const melhores = [...ordenados].reverse().slice(0, 10);
+
+// Média por UF, apenas entre os municípios efetivamente medidos.
+const porUf = new Map<string, { soma: number; n: number }>();
+for (const l of medidos) {
+  const atual = porUf.get(l.uf) ?? { soma: 0, n: 0 };
+  atual.soma += l.acessibilidade;
+  atual.n += 1;
+  porUf.set(l.uf, atual);
+}
+const rankingUf = ufs
+  .map((uf) => {
+    const agregado = porUf.get(uf.data.sigla);
+    return {
+      sigla: uf.data.sigla,
+      nome: uf.data.nome,
+      media: agregado && agregado.n ? agregado.soma / agregado.n : null,
+      medidos: agregado?.n ?? 0,
+    };
+  })
+  .sort((a, b) => (a.media ?? 2) - (b.media ?? 2));
+---
+
+<Base
+  titulo="Panorama"
+  descricao="Acessibilidade dos sites das prefeituras brasileiras, medida pelo PageSpeed Insights."
+>
+  <h1>A presença digital dos municípios brasileiros</h1>
+  <p class="sub">
+    {linhas.length.toLocaleString('pt-BR')} municípios catalogados.
+    {medidos.length.toLocaleString('pt-BR')} com acessibilidade medida.
+  </p>
+
+  <dl class="cartoes">
+    <div class="cartao">
+      <dt>Municípios catalogados</dt>
+      <dd>{linhas.length.toLocaleString('pt-BR')}</dd>
+    </div>
+    <div class="cartao">
+      <dt>Com medição</dt>
+      <dd>{medidos.length.toLocaleString('pt-BR')} <span style="font-size:1rem;font-weight:400">({cobertura}%)</span></dd>
+    </div>
+    <div class="cartao">
+      <dt>Acessibilidade média</dt>
+      <dd>{percentual(media)}</dd>
+    </div>
+    <div class="cartao">
+      <dt>Abaixo de 50</dt>
+      <dd>{criticos.toLocaleString('pt-BR')}</dd>
+    </div>
+  </dl>
+
+  <div class="aviso">
+    <p style="margin:0">
+      Acessibilidade de site público não é cortesia: é dever legal. O art. 63 da
+      Lei 13.146/2015 — a Lei Brasileira de Inclusão — torna obrigatória a
+      acessibilidade dos sítios da administração pública. Das quatro notas que o
+      PageSpeed Insights produz, esta é a única exigível.
+    </p>
+  </div>
+
+  <h2 id="piores">Os 20 mais críticos</h2>
+  <div class="rolagem">
+    <table>
+      <caption>Municípios com a menor nota de acessibilidade medida.</caption>
+      <thead>
+        <tr>
+          <th scope="col">Município</th>
+          <th scope="col">UF</th>
+          <th scope="col" class="numero">Acessibilidade</th>
+        </tr>
+      </thead>
+      <tbody>
+        {piores.map((l) => (
+          <tr>
+            <td><a href={href(`/municipio/${l.ibge}/`)}>{l.nome}</a></td>
+            <td>{l.uf}</td>
+            <td class="numero"><Nota valor={l.acessibilidade} metrica="Acessibilidade" /></td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+
+  <h2 id="melhores">Os 10 melhores</h2>
+  <div class="rolagem">
+    <table>
+      <caption>Municípios com a maior nota de acessibilidade medida.</caption>
+      <thead>
+        <tr>
+          <th scope="col">Município</th>
+          <th scope="col">UF</th>
+          <th scope="col" class="numero">Acessibilidade</th>
+        </tr>
+      </thead>
+      <tbody>
+        {melhores.map((l) => (
+          <tr>
+            <td><a href={href(`/municipio/${l.ibge}/`)}>{l.nome}</a></td>
+            <td>{l.uf}</td>
+            <td class="numero"><Nota valor={l.acessibilidade} metrica="Acessibilidade" /></td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+
+  <h2 id="estados">Por unidade federativa</h2>
+  <div class="rolagem">
+    <table>
+      <caption>Média de acessibilidade entre os municípios medidos de cada estado.</caption>
+      <thead>
+        <tr>
+          <th scope="col">Estado</th>
+          <th scope="col" class="numero">Medidos</th>
+          <th scope="col" class="numero">Média</th>
+        </tr>
+      </thead>
+      <tbody>
+        {rankingUf.map((uf) => (
+          <tr>
+            <td><a href={href(`/uf/${uf.sigla}/`)}>{uf.nome}</a> <span style="color:var(--tinta-fraca)">({uf.sigla})</span></td>
+            <td class="numero">{uf.medidos.toLocaleString('pt-BR')}</td>
+            <td class="numero"><Nota valor={uf.media} metrica={`Média de ${uf.nome}`} /></td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+</Base>

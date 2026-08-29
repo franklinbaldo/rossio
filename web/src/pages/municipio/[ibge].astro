@@ -1,0 +1,97 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import Nota from '../../components/Nota.astro';
+import { medicoesPorIbge, faixa, ROTULO_FAIXA, percentual } from '../../lib/psi';
+
+export async function getStaticPaths() {
+  const municipios = await getCollection('municipios');
+  const ufs = await getCollection('unidadesFederativas');
+  const porSigla = new Map(ufs.map((uf) => [uf.data.sigla, uf.data]));
+  return municipios.map((m) => ({
+    params: { ibge: m.data.codigo_ibge },
+    props: { municipio: m.data, uf: porSigla.get(m.data.uf) ?? null },
+  }));
+}
+
+const { municipio, uf } = Astro.props;
+const medicao = medicoesPorIbge().get(municipio.codigo_ibge) ?? null;
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+
+const metricas = [
+  { rotulo: 'Acessibilidade', valor: medicao?.acessibilidade ?? null, exigivel: true },
+  { rotulo: 'Desempenho', valor: medicao?.performance ?? null, exigivel: false },
+  { rotulo: 'SEO', valor: medicao?.seo ?? null, exigivel: false },
+  { rotulo: 'Boas práticas', valor: medicao?.boasPraticas ?? null, exigivel: false },
+];
+
+const dataMedicao = medicao?.timestamp
+  ? new Date(medicao.timestamp).toLocaleDateString('pt-BR', { dateStyle: 'long' })
+  : null;
+const acessibilidade = medicao?.acessibilidade ?? null;
+const situacao = faixa(acessibilidade);
+---
+
+<Base
+  titulo={municipio.nome}
+  descricao={`Auditoria do site da prefeitura de ${municipio.nome}, ${municipio.uf}.`}
+>
+  <p class="sub" style="margin-bottom:0.25rem">
+    <a href={`${base}/uf/${municipio.uf}/`}>{uf?.nome ?? municipio.uf}</a>
+  </p>
+  <h1>{municipio.nome}</h1>
+  <p class="sub">
+    Código IBGE {municipio.codigo_ibge}
+    {municipio.url && (
+      <> · <a href={municipio.url} rel="noopener nofollow">{municipio.url.replace(/^https?:\/\//, '')}</a></>
+    )}
+  </p>
+
+  {medicao === null ? (
+    <div class="aviso">
+      <p style="margin:0">
+        Este município ainda não foi medido. A ausência de nota não é aprovação
+        nem reprovação — apenas ausência de dado.
+      </p>
+    </div>
+  ) : (
+    <>
+      <dl class="cartoes">
+        {metricas.map((m) => (
+          <div class="cartao">
+            <dt>{m.rotulo}{m.exigivel && <> · <abbr title="Obrigação legal: art. 63 da Lei 13.146/2015">dever legal</abbr></>}</dt>
+            <dd><Nota valor={m.valor} metrica={m.rotulo} /></dd>
+          </div>
+        ))}
+      </dl>
+
+      <p class="sub">
+        Medição de {dataMedicao ?? 'data desconhecida'}
+        {medicao.url && <> sobre <code>{medicao.url}</code></>}.
+      </p>
+
+      {acessibilidade !== null && (
+        <div class="aviso">
+          <p style="margin:0">
+            A acessibilidade deste site foi medida em <strong>{percentual(acessibilidade)} de 100</strong>,
+            faixa <strong>{ROTULO_FAIXA[situacao]}</strong>.
+            {situacao === 'ruim' && (
+              <> Uma nota abaixo de 50 indica barreiras substanciais de acesso. O art. 63
+              da Lei 13.146/2015 obriga a acessibilidade dos sítios da administração pública.</>
+            )}
+            {' '}Esta é uma medição automatizada num instante: aponta onde olhar, não
+            substitui avaliação técnica de conformidade.
+          </p>
+        </div>
+      )}
+    </>
+  )}
+
+  <h2>Como esta página foi feita</h2>
+  <p>
+    A identidade deste município — código IBGE, nome, unidade federativa e endereço —
+    vem de um <em>concept</em> do bundle OKF, validado por <code>okf-parser check</code>.
+    As notas vêm da coleta do PageSpeed Insights, que é dado datado e vive fora do
+    bundle. Nenhuma das duas foi escrita à mão nesta página.
+  </p>
+</Base>

@@ -1,0 +1,68 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import Nota from '../../components/Nota.astro';
+import { medicoesPorIbge, percentual } from '../../lib/psi';
+
+export async function getStaticPaths() {
+  const ufs = await getCollection('unidadesFederativas');
+  const municipios = await getCollection('municipios');
+  return ufs.map((uf) => ({
+    params: { sigla: uf.data.sigla },
+    props: {
+      uf: uf.data,
+      municipios: municipios
+        .filter((m) => m.data.uf === uf.data.sigla)
+        .map((m) => m.data)
+        .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR')),
+    },
+  }));
+}
+
+const { uf, municipios } = Astro.props;
+const medicoes = medicoesPorIbge();
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+
+const linhas = municipios.map((m) => ({ ...m, medicao: medicoes.get(m.codigo_ibge) ?? null }));
+const comNota = linhas.filter((l) => l.medicao?.acessibilidade != null);
+const media = comNota.length
+  ? comNota.reduce((s, l) => s + (l.medicao!.acessibilidade as number), 0) / comNota.length
+  : null;
+---
+<Base titulo={uf.nome} descricao={`Acessibilidade dos sites municipais de ${uf.nome}.`}>
+  <h1>{uf.nome}</h1>
+  <p class="sub">Região {uf.regiao} · {municipios.length} municípios · {comNota.length} medidos</p>
+
+  <dl class="cartoes">
+    <div class="cartao"><dt>Municípios</dt><dd>{municipios.length}</dd></div>
+    <div class="cartao"><dt>Com medição</dt><dd>{comNota.length}</dd></div>
+    <div class="cartao"><dt>Acessibilidade média</dt><dd>{media === null ? '—' : percentual(media)}</dd></div>
+  </dl>
+
+  <h2>Municípios</h2>
+  <div class="rolagem">
+    <table>
+      <caption>Notas do PageSpeed Insights por município. Um travessão indica ausência de medição.</caption>
+      <thead>
+        <tr>
+          <th scope="col">Município</th>
+          <th scope="col" class="numero">Acessibilidade</th>
+          <th scope="col" class="numero">Desempenho</th>
+          <th scope="col" class="numero">SEO</th>
+          <th scope="col" class="numero">Boas práticas</th>
+        </tr>
+      </thead>
+      <tbody>
+        {linhas.map((l) => (
+          <tr>
+            <td><a href={`${base}/municipio/${l.codigo_ibge}/`}>{l.nome}</a></td>
+            <td class="numero"><Nota valor={l.medicao?.acessibilidade ?? null} metrica="Acessibilidade" /></td>
+            <td class="numero"><Nota valor={l.medicao?.performance ?? null} metrica="Desempenho" /></td>
+            <td class="numero"><Nota valor={l.medicao?.seo ?? null} metrica="SEO" /></td>
+            <td class="numero"><Nota valor={l.medicao?.boasPraticas ?? null} metrica="Boas práticas" /></td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+</Base>

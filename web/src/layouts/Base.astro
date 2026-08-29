@@ -1,0 +1,133 @@
+---
+interface Props {
+  titulo: string;
+  descricao?: string;
+}
+const { titulo, descricao } = Astro.props;
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const href = (caminho: string) => `${base}${caminho}`;
+---
+
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{titulo} — Rossio</title>
+    {descricao && <meta name="description" content={descricao} />}
+    <style is:global>
+      :root {
+        --tinta: #16202a;
+        --tinta-fraca: #55636f;
+        --fundo: #fbfaf7;
+        --papel: #ffffff;
+        --borda: #d9d5cc;
+        --realce: #1a4f7a;
+        --boa: #14532d;
+        --boa-fundo: #dcfce7;
+        --media: #713f12;
+        --media-fundo: #fef3c7;
+        --ruim: #7f1d1d;
+        --ruim-fundo: #fee2e2;
+        --sem-dado: #44403c;
+        --sem-dado-fundo: #ececea;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        background: var(--fundo);
+        color: var(--tinta);
+        font: 16px/1.6 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      }
+      .pular {
+        position: absolute;
+        left: -9999px;
+        top: 0;
+        background: var(--tinta);
+        color: #fff;
+        padding: 0.75rem 1rem;
+        z-index: 10;
+      }
+      .pular:focus { left: 0; }
+      a { color: var(--realce); }
+      a:focus-visible,
+      button:focus-visible,
+      input:focus-visible {
+        outline: 3px solid var(--realce);
+        outline-offset: 2px;
+      }
+      .envelope { max-width: 62rem; margin: 0 auto; padding: 0 1.25rem; }
+      header.topo { border-bottom: 1px solid var(--borda); background: var(--papel); }
+      header.topo .envelope { display: flex; flex-wrap: wrap; gap: 1rem; align-items: baseline; padding-block: 1rem; }
+      header.topo a.marca { font-weight: 700; font-size: 1.25rem; color: var(--tinta); text-decoration: none; }
+      header.topo nav { margin-left: auto; }
+      header.topo nav a { margin-left: 1.25rem; }
+      main { padding-block: 2rem 3rem; }
+      h1 { font-size: 1.9rem; line-height: 1.25; margin: 0 0 0.5rem; }
+      h2 { font-size: 1.3rem; margin: 2.5rem 0 0.75rem; }
+      .sub { color: var(--tinta-fraca); margin-top: 0; }
+      table { width: 100%; border-collapse: collapse; background: var(--papel); }
+      caption { text-align: left; color: var(--tinta-fraca); padding-bottom: 0.5rem; }
+      th, td { text-align: left; padding: 0.6rem 0.7rem; border-bottom: 1px solid var(--borda); }
+      th { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--tinta-fraca); }
+      td.numero, th.numero { text-align: right; font-variant-numeric: tabular-nums; }
+      .rolagem { overflow-x: auto; border: 1px solid var(--borda); border-radius: 6px; }
+      .nota {
+        display: inline-block;
+        padding: 0.1rem 0.5rem;
+        border-radius: 999px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        white-space: nowrap;
+      }
+      .nota-boa { background: var(--boa-fundo); color: var(--boa); }
+      .nota-media { background: var(--media-fundo); color: var(--media); }
+      .nota-ruim { background: var(--ruim-fundo); color: var(--ruim); }
+      .nota-sem-dado { background: var(--sem-dado-fundo); color: var(--sem-dado); }
+      .cartoes { display: grid; grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+      .cartao { background: var(--papel); border: 1px solid var(--borda); border-radius: 6px; padding: 1rem; }
+      .cartao dt { font-size: 0.8rem; color: var(--tinta-fraca); margin: 0; }
+      .cartao dd { margin: 0.25rem 0 0; font-size: 1.6rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+      footer.rodape { border-top: 1px solid var(--borda); margin-top: 3rem; padding-block: 1.5rem 2.5rem; color: var(--tinta-fraca); font-size: 0.9rem; }
+      footer.rodape p { margin: 0.4rem 0; }
+      .aviso { background: var(--papel); border-left: 4px solid var(--realce); padding: 0.9rem 1rem; margin: 1.5rem 0; }
+      ul.lista-uf { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr)); gap: 0.5rem; }
+      ul.lista-uf a { display: block; padding: 0.6rem 0.75rem; background: var(--papel); border: 1px solid var(--borda); border-radius: 6px; text-decoration: none; }
+      ul.lista-uf a:hover { border-color: var(--realce); }
+    </style>
+  </head>
+  <body>
+    <a class="pular" href="#conteudo">Pular para o conteúdo</a>
+    <header class="topo">
+      <div class="envelope">
+        <a class="marca" href={href('/')}>Rossio</a>
+        <nav aria-label="Principal">
+          <a href={href('/')}>Panorama</a>
+          <a href={href('/uf/')}>Estados</a>
+        </nav>
+      </div>
+    </header>
+    <main id="conteudo">
+      <div class="envelope">
+        <slot />
+      </div>
+    </main>
+    <footer class="rodape">
+      <div class="envelope">
+        <p>
+          <strong>Rossio</strong> — a terra comum da vila. Auditoria da presença digital
+          dos 5.570 municípios brasileiros.
+        </p>
+        <p>
+          Notas medidas pelo Google PageSpeed Insights. Uma nota de acessibilidade é uma
+          medição automatizada num instante: não é laudo, e não esgota a avaliação de
+          conformidade com a Lei 13.146/2015 nem com o eMAG.
+        </p>
+        <p>
+          Dados sob <a href="https://creativecommons.org/licenses/by/4.0/deed.pt-br">CC BY 4.0</a>.
+          Código sob MIT. <a href="https://github.com/franklinbaldo/rossio">Repositório</a>.
+        </p>
+      </div>
+    </footer>
+  </body>
+</html>

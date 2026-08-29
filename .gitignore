@@ -48,3 +48,12 @@ build/
 
 # Dependencies
 uv.lock
+# site estatico (Astro)
+site/node_modules/
+site/dist/
+site/.astro/
+
+# aplicacao web (Astro) — `site/` ja e a saida do MkDocs, por isso `web/`
+web/node_modules/
+web/dist/
+web/.astro/

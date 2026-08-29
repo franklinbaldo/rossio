@@ -1,0 +1,35 @@
+---
+import { faixa, percentual, ROTULO_FAIXA } from '../lib/psi';
+
+interface Props {
+  valor: number | null;
+  /** Nome da métrica, para que o rótulo acessível diga do que se trata. */
+  metrica?: string;
+}
+const { valor, metrica } = Astro.props;
+const classe = faixa(valor);
+const pct = percentual(valor);
+const rotulo = ROTULO_FAIXA[classe];
+// A cor não pode ser o único portador de significado: o texto entre parênteses
+// é lido por quem não distingue as cores e por leitor de tela.
+const descricao = pct === null
+  ? `${metrica ? metrica + ': ' : ''}sem medição`
+  : `${metrica ? metrica + ': ' : ''}${pct} de 100, ${rotulo}`;
+---
+<span class={`nota nota-${classe}`} title={descricao}>
+  <span aria-hidden="true">{pct === null ? '—' : pct}</span>
+  <span class="visualmente-oculto">{descricao}</span>
+</span>
+<style>
+  .visualmente-oculto {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
+  }
+</style>
