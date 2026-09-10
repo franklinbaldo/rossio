@@ -87,7 +87,7 @@ jobs:
         run: mkdir -p data/output data/psi_error_reports
 
       - name: Restore previous database (if exists)
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: data/rossio.duckdb
           key: psi-duckdb-${{ github.run_id }}
@@ -266,7 +266,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Save database cache
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v5
         if: always()
         with:
           path: data/rossio.duckdb
