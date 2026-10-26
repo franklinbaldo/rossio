@@ -41,13 +41,16 @@ data/*.duckdb.wal
 data/psi_error_reports/
 site/
 
+# Complete run outputs are preserved in releases, never committed
+data/runs/
+restored/
+
 # Build artifacts
 dist/
 build/
 *.egg-info/
 
 # Dependencies
-uv.lock
 # site estatico (Astro)
 site/node_modules/
 site/dist/

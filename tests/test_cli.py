@@ -3,7 +3,7 @@
 import os
 import tempfile
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from typer.testing import CliRunner
@@ -106,7 +106,10 @@ class TestBatchCSV:
             csv_file = f.name
 
         try:
-            with patch.dict(os.environ, {"PAGESPEED_API_KEY": "test_key"}):
+            with (
+                patch.dict(os.environ, {"PAGESPEED_API_KEY": "test_key"}),
+                patch("rossio.cli.BatchProcessor.process", new_callable=AsyncMock),
+            ):
                 # Teste apenas se o arquivo é encontrado (não executa auditoria real)
                 result = runner.invoke(
                     app,
