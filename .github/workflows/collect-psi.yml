@@ -2,284 +2,138 @@ name: Coleta PSI (PageSpeed Insights)
 
 on:
   schedule:
-    - cron: '0 3 * * *'  # Todo dia as 03:00 UTC
+    - cron: '17 3 * * 1'  # Semanal; opt-in depois de corrigir PSI_KEY
   workflow_dispatch:
     inputs:
-      max_concurrent:
-        description: 'Requisicoes simultaneas'
-        required: false
-        default: '10'
+      max_sites:
+        description: 'Limite de sites (1-1000); visita os menos recentes primeiro'
+        default: '1000'
         type: string
-      requests_per_second:
-        description: 'Requisicoes por segundo (max 4.0)'
-        required: false
-        default: '3.5'
-        type: string
-      skip_recent_hours:
-        description: 'Pular sites auditados nas ultimas N horas (0=todos)'
-        required: false
-        default: '24'
+      seconds:
+        description: 'Orcamento de coleta em segundos (1-1200)'
+        default: '1200'
         type: string
 
-env:
-  PAGESPEED_API_KEY: ${{ secrets.PSI_KEY }}
-  IA_ACCESS_KEY: ${{ secrets.IA_ACCESS_KEY }}
-  IA_SECRET_KEY: ${{ secrets.IA_SECRET_KEY }}
-  DATABASE_PATH: data/rossio.duckdb
-  OUTPUT_DIR: data/output
+# Single writer. A later dispatch must not cancel a snapshot in progress.
+concurrency:
+  group: psi-state
+  cancel-in-progress: false
 
 permissions:
   contents: write
   pull-requests: write
 
 jobs:
-  validate:
-    name: Validar Configuracao
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check PSI API Key
-        run: |
-          if [ -z "${{ secrets.PSI_KEY }}" ]; then
-            echo "::error::PSI_KEY secret nao configurado!"
-            echo "Configure o secret PSI_KEY com sua Google PageSpeed Insights API key"
-            exit 1
-          fi
-          echo "PSI_KEY configurado corretamente"
-
-      - name: Check Internet Archive Keys (opcional)
-        run: |
-          if [ -z "${{ secrets.IA_ACCESS_KEY }}" ] || [ -z "${{ secrets.IA_SECRET_KEY }}" ]; then
-            echo "::warning::IA_ACCESS_KEY ou IA_SECRET_KEY nao configurados"
-            echo "Upload para Internet Archive sera ignorado"
-          else
-            echo "Credenciais do Internet Archive configuradas"
-          fi
-
   collect:
-    name: Coletar Dados PSI
-    needs: validate
+    # Invalid key observed on 2026-10-25. No automatic retries until repaired.
+    if: github.event_name == 'workflow_dispatch' || vars.PSI_SCHEDULE_ENABLED == 'true'
     runs-on: ubuntu-latest
-    # Timeout de 120 minutos e suficiente porque:
-    # - Coleta incremental (skip-recent=24h) processa apenas ~100-200 sites
-    # - Coleta completa: 5.570 sites × 2 estrategias ÷ 3.5 req/s = ~53 min
-    # - 120 min fornece margem para retries e overhead
-    timeout-minutes: 120
-
+    timeout-minutes: 35
+    env:
+      PAGESPEED_API_KEY: ${{ secrets.PSI_KEY }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      RUN_DIR: data/runs/psi-${{ github.run_id }}-${{ github.run_attempt }}
+      MAX_SITES: ${{ inputs.max_sites || '1000' }}
+      SECONDS_LIMIT: ${{ inputs.seconds || '1200' }}
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0  # Necessario para commits
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v4
+      - uses: astral-sh/setup-uv@v4
         with:
-          version: "latest"
-
-      - name: Install dependencies
-        run: uv sync
-
-      - name: Create output directories
-        run: mkdir -p data/output data/psi_error_reports
-
-      - name: Restore previous database (if exists)
-        uses: actions/cache@v4
+          version: '0.13.5'
+      - name: Install reproducible dependencies
+        run: uv sync --frozen
+      - name: Validate budgets and credential presence
+        run: |
+          python - <<'PY'
+          import os
+          assert 1 <= int(os.environ['MAX_SITES']) <= 1000
+          assert 1 <= int(os.environ['SECONDS_LIMIT']) <= 1200
+          assert os.environ.get('PAGESPEED_API_KEY', '').strip(), 'PSI_KEY ausente'
+          PY
+      - name: Restore durable database (cache is not an archive)
+        id: restore
+        run: |
+          mkdir -p data
+          gh api --paginate --slurp "repos/$GITHUB_REPOSITORY/releases?per_page=100" > /tmp/psi-releases.json
+          TAG=$(jq -r '[.[][] | select(.draft == false and (.tag_name | startswith("psi-state-")))] | sort_by(.published_at) | last | .tag_name // empty' /tmp/psi-releases.json)
+          if [ -n "$TAG" ]; then
+            mkdir -p restored
+            gh release download "$TAG" --pattern 'rossio.duckdb' --pattern 'database.sha256' --dir restored
+            (cd restored && sha256sum -c database.sha256)
+            cp restored/rossio.duckdb data/rossio.duckdb
+            echo "Restored $TAG" >> "$GITHUB_STEP_SUMMARY"
+            echo "found=true" >> "$GITHUB_OUTPUT"
+          else
+            echo 'Sem snapshot duravel anterior; primeiro banco Python. Os dados legados em Git permanecem preservados.' >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - name: Recover legacy cache on first durable run
+        if: steps.restore.outputs.found != 'true'
+        uses: actions/cache/restore@v4
         with:
           path: data/rossio.duckdb
-          key: psi-duckdb-${{ github.run_id }}
-          restore-keys: |
-            psi-duckdb-
-
-      - name: Run PSI Collection
+          key: psi-duckdb-migrate-${{ github.run_id }}
+          restore-keys: psi-duckdb-
+      - name: Bounded collection
         id: collect
         continue-on-error: true
         run: |
-          # Configurar parametros
-          MAX_CONCURRENT="${{ github.event.inputs.max_concurrent || '10' }}"
-          RPS="${{ github.event.inputs.requests_per_second || '3.5' }}"
-          SKIP_RECENT="${{ github.event.inputs.skip_recent_hours || '24' }}"
-
-          echo "Iniciando coleta PSI (otimizada)..."
-          echo "  Max concurrent: ${MAX_CONCURRENT}"
-          echo "  Requests/second: ${RPS}"
-          echo "  Skip recent: ${SKIP_RECENT}h"
-
-          # Executar coleta via CLI Python com coleta incremental
-          uv run rossio batch \
-            sites_das_prefeituras_brasileiras.csv \
-            --output-dir "$OUTPUT_DIR" \
-            --max-concurrent "$MAX_CONCURRENT" \
-            --requests-per-second "$RPS" \
-            --skip-recent "$SKIP_RECENT" \
-            --url-column "url" \
-            --export-parquet \
-            --export-json \
-            2>&1 | tee collection.log
-
-          # Verificar se houve erros
-          if grep -q "ERROR\|Exception\|Failed" collection.log; then
-            echo "has_errors=true" >> $GITHUB_OUTPUT
-          else
-            echo "has_errors=false" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Generate statistics
-        if: always()
-        run: |
-          echo "## Estatisticas da Coleta" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-
-          if [ -f "$DATABASE_PATH" ]; then
-            uv run rossio stats --db-path "$DATABASE_PATH" || true
-
-            # Adicionar ao summary
-            echo "Database: $DATABASE_PATH" >> $GITHUB_STEP_SUMMARY
-            echo "Size: $(du -h $DATABASE_PATH | cut -f1)" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "Database nao encontrado" >> $GITHUB_STEP_SUMMARY
-          fi
-
-      - name: Archive error logs
-        if: steps.collect.outputs.has_errors == 'true'
-        run: |
-          TIMESTAMP=$(date -u +'%Y%m%d_%H%M%S')
-          cp collection.log data/psi_error_reports/collection_${TIMESTAMP}.log
-          echo "Log arquivado em data/psi_error_reports/collection_${TIMESTAMP}.log"
-
-      - name: Export data for web dashboard (static JSON)
-        if: always()
-        run: |
-          if [ -f "$DATABASE_PATH" ]; then
-            echo "Exportando dados para dashboard (JSON estatico)..."
-
-            # Usar CLI para exportar JSONs estaticos
-            uv run rossio export-dashboard \
-              --db-path "$DATABASE_PATH" \
-              --output-dir "docs/data" \
-              || echo "Dashboard export failed, skipping..."
-
-            # Listar arquivos gerados
-            if [ -d "docs/data" ]; then
-              echo "Arquivos gerados:"
-              ls -la docs/data/
-            fi
-          fi
-
-      - name: Update and export quarantine list
-        if: always()
-        run: |
-          if [ -f "$DATABASE_PATH" ]; then
-            echo "Atualizando lista de quarentena..."
-
-            # Atualizar quarentena (sites com 3+ dias de falha)
-            uv run rossio quarantine --update --min-days 3 --db-path "$DATABASE_PATH" || true
-
-            # Exportar para JSON (para repositorio e Internet Archive)
-            QUARANTINE_DATE=$(date -u +'%Y-%m-%d')
-            uv run rossio quarantine --export-json "data/quarantine/quarantine-${QUARANTINE_DATE}.json" --db-path "$DATABASE_PATH" || true
-            uv run rossio quarantine --export-json "data/quarantine/quarantine-latest.json" --db-path "$DATABASE_PATH" || true
-            uv run rossio quarantine --export-csv "data/quarantine/quarantine-latest.csv" --db-path "$DATABASE_PATH" || true
-
-            # Resumo para o step summary
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "## Quarentena" >> $GITHUB_STEP_SUMMARY
-            if [ -f "data/quarantine/quarantine-latest.json" ]; then
-              QUARANTINE_COUNT=$(jq '.sites | length' data/quarantine/quarantine-latest.json 2>/dev/null || echo "0")
-              echo "Sites em quarentena: ${QUARANTINE_COUNT}" >> $GITHUB_STEP_SUMMARY
-            fi
-          fi
-
-      - name: Upload to Internet Archive
-        if: success() && env.IA_ACCESS_KEY != '' && env.IA_SECRET_KEY != ''
+          uv run --frozen python -m rossio.scheduled --output "$RUN_DIR" \
+            --max-sites "$MAX_SITES" --seconds "$SECONDS_LIMIT"
+      - name: Publish Internet Archive snapshot when configured
+        id: archive
+        if: always() && steps.collect.outcome != 'skipped'
         continue-on-error: true
         env:
-          IA_ITEM_IDENTIFIER: psi_brazilian_city_audits
+          IA_ACCESS_KEY: ${{ secrets.IA_ACCESS_KEY }}
+          IA_SECRET_KEY: ${{ secrets.IA_SECRET_KEY }}
         run: |
-          if [ -f "$DATABASE_PATH" ]; then
-            echo "Uploading to Internet Archive..."
-
-            # Upload JSONs do dashboard
-            if [ -d "docs/data" ]; then
-              echo "Uploading dashboard JSON files to Internet Archive..."
-              uv run python -m rossio.upload_ia dashboard \
-                docs/data \
-                --item "$IA_ITEM_IDENTIFIER" \
-                || echo "Dashboard JSON upload failed"
-            fi
-
-            # Upload quarentena diario
-            if [ -f "data/quarantine/quarantine-latest.json" ]; then
-              echo "Uploading quarantine list to Internet Archive..."
-              QUARANTINE_DATE=$(date -u +'%Y-%m-%d')
-
-              uv run python -m rossio.upload_ia quarantine \
-                "data/quarantine/quarantine-${QUARANTINE_DATE}.json" \
-                "data/quarantine/quarantine-latest.json" \
-                --item "$IA_ITEM_IDENTIFIER" \
-                || echo "Quarantine IA upload failed"
-            fi
-          fi
-
-      - name: Commit and push results
-        if: always()
+          test -f "$RUN_DIR/manifest.json"
+          uv run --frozen python -m rossio.scheduled --output "$RUN_DIR" --publish-only
+      - name: Preserve database and complete run as immutable release
+        if: always() && steps.collect.outcome != 'skipped'
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
-          # Add all data files and dashboard JSONs
-          git add data/ || true
-          git add docs/data/ || true
-
-          # Check if there are changes
-          if git diff --staged --quiet; then
-            echo "Nenhuma alteracao para commitar"
-            exit 0
-          fi
-
-          # Create commit message
-          TIMESTAMP=$(date -u +'%Y-%m-%d %H:%M UTC')
-          if [ "${{ steps.collect.outputs.has_errors }}" == "true" ]; then
-            COMMIT_MSG="chore(psi): coleta com erros - $TIMESTAMP"
-          else
-            COMMIT_MSG="chore(psi): coleta bem-sucedida - $TIMESTAMP"
-          fi
-
-          git commit -m "$COMMIT_MSG" -m "Workflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-
-          # A main exige head atualizado antes do merge, e a regra tambem vale
-          # para push: o resultado da coleta vai por PR em auto-merge.
-          BRANCH=automation/coleta-psi
-          git checkout -B "$BRANCH"
-          git push -f origin "$BRANCH"
-          NUM=$(gh pr list --head "$BRANCH" --state open --json number --jq '.[0].number // empty')
-          if [ -z "$NUM" ]; then
-            CORPO="Resultado da coleta PSI, gerado pelo workflow Collect PSI."
-            URL=$(gh pr create --base main --head "$BRANCH" --title "chore(psi): coleta diaria" --body "$CORPO")
-            NUM="${URL##*/}"
-          fi
-          gh pr merge "$NUM" --auto --squash
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Save database cache
-        uses: actions/cache/save@v4
+          test -f "$RUN_DIR/rossio.duckdb"
+          test -f "$RUN_DIR.tar.gz"
+          (cd "$RUN_DIR" && sha256sum rossio.duckdb > database.sha256)
+          TAG="psi-state-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          gh release create "$TAG" "$RUN_DIR/rossio.duckdb" "$RUN_DIR/database.sha256" \
+            "$RUN_DIR.tar.gz" "$RUN_DIR/manifest.json" --target "$GITHUB_SHA" \
+            --title "$TAG" --notes "Snapshot PSI. Consulte manifest.json para cobertura, falhas e status do Internet Archive." --latest=false
+      - name: Propose dashboard and quarantine updates
+        if: steps.collect.outcome == 'success'
+        run: |
+          test -d "$RUN_DIR/dashboard"
+          cp "$RUN_DIR/dashboard/"*.json docs/data/
+          mkdir -p data/quarantine
+          cp "$RUN_DIR/quarantine.json" data/quarantine/quarantine-latest.json
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add docs/data/ data/quarantine/quarantine-latest.json
+          if git diff --cached --quiet; then exit 0; fi
+          BRANCH="automation/psi-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          git switch -c "$BRANCH"
+          git commit -m 'chore(psi): atualizar painel apos coleta limitada'
+          git push origin "$BRANCH"
+          gh pr create --base main --head "$BRANCH" --title 'chore(psi): resultados de coleta limitada' \
+            --body "Snapshot e cobertura: https://github.com/$GITHUB_REPOSITORY/releases/tag/psi-state-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT. Revisar antes de incorporar."
+      - name: Recovery artifact
         if: always()
-        with:
-          path: data/rossio.duckdb
-          key: psi-duckdb-${{ github.run_id }}
-
-      - name: Upload artifacts
         uses: actions/upload-artifact@v4
-        if: always()
         with:
-          name: psi-results-${{ github.run_id }}
+          name: psi-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
-            data/output/
-            data/quarantine/
-            docs/data/
-            collection.log
-          retention-days: 30
+            data/runs/
+          retention-days: 7
+          if-no-files-found: warn
+      - name: Report actual outcome
+        if: always() && steps.collect.outcome != 'skipped'
+        env:
+          COLLECT_OUTCOME: ${{ steps.collect.outcome }}
+          ARCHIVE_OUTCOME: ${{ steps.archive.outcome }}
+        run: |
+          if [ -f "$RUN_DIR/manifest.json" ]; then cat "$RUN_DIR/manifest.json" >> "$GITHUB_STEP_SUMMARY"; fi
+          test "$COLLECT_OUTCOME" = success
+          test "$ARCHIVE_OUTCOME" = success

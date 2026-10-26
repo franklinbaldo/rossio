@@ -11,13 +11,20 @@ import httpx
 from asyncio_throttle import Throttler
 from rich.console import Console
 from rich.progress import Progress, TaskID
-from tenacity import retry, stop_after_attempt, wait_exponential
+from tenacity import retry, retry_if_exception, stop_after_attempt, wait_exponential
 
 from .models import BatchAuditConfig, PageSpeedInsightsResult, SiteAudit
 from .storage import DuckDBStorage
 
 logger = logging.getLogger(__name__)
 console = Console()
+
+
+def transient_psi_error(exc: BaseException) -> bool:
+    """Retry transport failures and server errors, not credentials or quota."""
+    return isinstance(exc, httpx.RequestError) or (
+        isinstance(exc, httpx.HTTPStatusError) and exc.response.status_code >= 500
+    )
 
 
 class PageSpeedCollector:
@@ -64,6 +71,7 @@ class PageSpeedCollector:
 
     @retry(
         stop=stop_after_attempt(3),
+        retry=retry_if_exception(transient_psi_error),
         wait=wait_exponential(multiplier=1, min=2, max=10),
         reraise=True,
     )
@@ -95,11 +103,17 @@ class PageSpeedCollector:
         try:
             # Buscar dados mobile e desktop em paralelo
             tasks = [
-                self._fetch_pagespeed_data(url, "mobile"),
-                self._fetch_pagespeed_data(url, "desktop"),
+                asyncio.create_task(self._fetch_pagespeed_data(url, "mobile")),
+                asyncio.create_task(self._fetch_pagespeed_data(url, "desktop")),
             ]
 
-            mobile_result, desktop_result = await asyncio.gather(*tasks)
+            try:
+                mobile_result, desktop_result = await asyncio.gather(*tasks)
+            finally:
+                for task in tasks:
+                    if not task.done():
+                        task.cancel()
+                await asyncio.gather(*tasks, return_exceptions=True)
 
             audit.mobile_result = mobile_result
             audit.desktop_result = desktop_result
@@ -121,11 +135,11 @@ class PageSpeedCollector:
             )
             audit.error_message = f"HTTP {e.response.status_code}: {error_body or e.response.reason_phrase}"
         except httpx.TimeoutException as e:
-            logger.error(f"Timeout auditing {url}: {e}")
-            audit.error_message = f"Timeout: {e}"
+            logger.error(f"Timeout auditing {url}: {type(e).__name__}")
+            audit.error_message = f"Timeout: {type(e).__name__}"
         except httpx.RequestError as e:
-            logger.error(f"Request error auditing {url}: {e}")
-            audit.error_message = f"Request error: {e}"
+            logger.error(f"Request error auditing {url}: {type(e).__name__}")
+            audit.error_message = f"Request error: {type(e).__name__}"
         except ValueError as e:
             logger.error(f"Validation error auditing {url}: {e}")
             audit.error_message = f"Validation error: {e}"
